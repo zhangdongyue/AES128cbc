@@ -42,14 +42,35 @@ int euclid_gcb_ext(int a,int b)
     if(B3==1) return B2; 
 }
 
-int euclid_gcb_GF2sup8_ext(int mx,int bx) 
+/*return GCB(mx,bx),inverse=inverse(bx)mod(mx)*/
+int euclid_gcb_GF2sup8_ext(int mx,int bx,int * inverse) 
 {
     int a1x=1,a2x=0,a3x=mx;
     int b1x=0,b2x=1,b3x=bx;
+	int t1x=0,t2x=0,t3x=0;
     int qx; 
 
     while(b3x!=0 && b3x!=1)
     {   
+		qx=GF2sup8_divid(a3x,b3x,NULL);
+		t1x=GF2sup8_red(a1x,GF2sup8_mul16(qx,b1x));	
+		t2x=GF2sup8_red(a2x,GF2sup8_mul16(qx,b2x));
+		t3x=GF2sup8_red(a3x,GF2sup8_mul16(qx,b3x));
 
+		a1x=b1x,a2x=b2x,a3x=b3x;
+		b1x=t1x,b2x=t2x,b3x=t3x;
     }   
+
+	/*
+	b3x=1:b3x=(mx,bx),b2x=inverse(bx)mod(mx)
+	b3x=0:a3x=gcb(mx,bx),no inverse
+	*/
+	if(b3x){
+		*inverse=b2x;
+		return b3x;
+	}else{
+		*inverse=-1;
+		return a3x;
+	}
 }
+
