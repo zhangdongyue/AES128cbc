@@ -1,49 +1,49 @@
 #include"aes128.h"
-int8_t bit_vector[8]={0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80};
+int8_t bit_vector[8]={0x80,0x40,0x20,0x10,0x08,0x04,0x02,0x01};
 
-static void set_bit(BINT * s,BINT off)
+static void set_bit(int * s,int off)
 {
-	BINT b=1;
+	int b=1;
 	b<<=off;
 	*s|=b;	
 }
 
-static int move_left_by(BINT * s,const BINT b)
+static int move_left_by(const int s,const int b)
 {
-	BINT S=*s,B=b;
-	if(S>B)
-		return -1;
-	int i,si=0,bi=0;
-	for(i=0;i<8;i++)
-	{
-		if(S&bit_vector[i])
-			si=i;
-		if(B&bit_vector[i])
-			bi=i;
+    if(s>b || s<=0)
+        return -1; 
+    int i,si=-1,bi=-1;
+    for(i=0;i<8;i++)
+    {   
+        if(s&bit_vector[i] && si==-1)
+            si=i;
+        if(b&bit_vector[i] && bi==-1)
+            bi=i;
 
-		if(si&&bi)
-			break;
-	}
-	int m_n=bi-si;
-	*s=S<<m_n;
-	return m_n;
+        if(si>0&&bi>0)
+            break;
+    }   
+    int m_n=si-bi;
+    return m_n;
 }
 
 /*a+b*/
-BINT GF2sup8_add(BINT a,BINT b)
+int GF2sup8_add(int a,int b)
 {
         return a^b;
 }
+
 /*a-b*/
-BINT GF2sup8_red(BINT a,BINT b)
+int GF2sup8_red(int a,int b)
 {
 	return GF2sup8_add(a,b);
 }
+
 /*axb*/
-BINT GF2sup8_mul(BINT a,BINT b)
+int GF2sup8_mul(int a,int b)
 {
-        BINT BX[8];
-        BINT last;
+        int BX[8];
+        int last;
         BX[0]=a;
         int i;
         for(i=1;i<8;i++){
@@ -54,8 +54,8 @@ BINT GF2sup8_mul(BINT a,BINT b)
                         BX[i]=BX[i-1]<<1;
         }
         i=0;
-        BINT n=1;
-        BINT ret=0;
+        int n=1;
+        int ret=0;
         while(n){
                 if(n&b) ret^=BX[i];
                 i++;
@@ -68,14 +68,15 @@ BINT GF2sup8_mul(BINT a,BINT b)
 
 /*a/b ,return divide number,
 a:dividend,b:divisor,mod:remainder*/
-BINT GF2sup8_divid(BINT a,BINT b,BINT * mod)
+int GF2sup8_divid(int a,int b,int * mod)
 {
-	BINT ret = 0;
+	int ret = 0;
 	int c=0;
 	while(a>b){
-		c=move_left_by(&b,a);
+		c=move_left_by(b,a);
+		if(c<0) break;
 		set_bit(&ret,c);
-		a=b^a;
+		a=(b<<c)^a;
 	}
 	*mod=a;
 	return ret;
@@ -83,12 +84,14 @@ BINT GF2sup8_divid(BINT a,BINT b,BINT * mod)
 
 /*a%b,return remainder,
 a:dividend,b:divisor*/
-BINT GF2sup8_mod(BINT a,BINT b)
+int GF2sup8_mod(int a,int b)
 {
+	int c=0;
 	while(a>b)
 	{
-		move_left_by(&b,a);
-		a=b^a;
+		c=move_left_by(b,a);
+		if(c<0) break;
+		a=(b<<c)^a;
 	}
 	return a;
 }

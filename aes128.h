@@ -7,26 +7,24 @@
 /* The irreducible polynomial:x^8+x^4+x^3+x+1
    bit type:00011011*/
 #define IRR_POLY 0x1b
-#define ZERO (BINT)0
+#define ZERO (int)0
 
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
-#define BINT int8_t 
-
 int SBOX[16][16];
 
 /*GF2^8*/
-BINT GF2sup8_add(BINT a,BINT b);//+
-BINT GF2sup8_reduce(BINT a,BINT b);//-
-BINT GF2sup8_mul(BINT a,BINT b);//x
-BINT GF2sup8_divid(BINT a,BINT b,BINT * mod);// /
-BINT GF2sup8_mod(BINT a,BINT b);//%   
+int GF2sup8_add(int a,int b);//+
+int GF2sup8_reduce(int a,int b);//-
+int GF2sup8_mul(int a,int b);//x
+int GF2sup8_divid(int a,int b,int * mod);// /
+int GF2sup8_mod(int a,int b);//%   
 
 /*GCB*/
 int euclid_gcb(int a,int b);
 int euclid_gcb_ext(int a,int b);
-BINT euclid_gcb_GF2sup8_ext(BINT mx,BINT bx);
+int euclid_gcb_GF2sup8_ext(int mx,int bx);
 
 /*S-Box*/
 void sbox_init();
