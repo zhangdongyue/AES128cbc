@@ -4,24 +4,29 @@
 #include<stdio.h>
 #include<stdlib.h>
 
+/* The irreducible polynomial:x^8+x^4+x^3+x+1
+   bit type:00011011*/
 #define IRR_POLY 0x1b
-#define ZERO (int8_t)0
+#define ZERO (BINT)0
 
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
+#define BINT int8_t 
+
 int SBOX[16][16];
 
 /*GF2^8*/
-int8_t GF2sup8_xor(int8_t a,int8_t b);
-int8_t GF2sup8_reduce(int8_t a,int8_t b);
-int8_t GF2sup8_division(int8_t a,int8_t b);
-int8_t GF2sup8_mul(int8_t a,int8_t b);
+BINT GF2sup8_add(BINT a,BINT b);//+
+BINT GF2sup8_reduce(BINT a,BINT b);//-
+BINT GF2sup8_mul(BINT a,BINT b);//x
+BINT GF2sup8_divid(BINT a,BINT b,BINT * mod);// /
+BINT GF2sup8_mod(BINT a,BINT b);//%   
 
 /*GCB*/
 int euclid_gcb(int a,int b);
 int euclid_gcb_ext(int a,int b);
-int8_t euclid_gcb_GF2sup8_ext(int8_t mx,int8_t bx);
+BINT euclid_gcb_GF2sup8_ext(BINT mx,BINT bx);
 
 /*S-Box*/
 void sbox_init();
