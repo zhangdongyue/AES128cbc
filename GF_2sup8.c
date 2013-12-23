@@ -7,7 +7,7 @@ int16_t bit_vector[16]=
 	0x0008,0x0004,0x0002,0x0001
 };
 
-static void set_bit(int * s,const int off)
+void set_bit(int * s,const int off)
 {
 	int b=1;
 	b<<=off;
