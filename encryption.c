@@ -90,6 +90,7 @@ int state_line_move_left(byte_t * state,int n)
 {
 	if(n>3 || n<0 || !state) 
 		return -1;
+	if(n==0) return 0;
 	word_t * swt = (word_t*)state;
 	word_t sw=*swt;
 	if(is_big_endian()){
@@ -100,48 +101,6 @@ int state_line_move_left(byte_t * state,int n)
 
 	return 0;
 }
-#if 0
-static int state_line_move_left(byte_t * state,int n)
-{
-	if(n>3 || n<0 || !state) 
-		return -1;
-
-	switch(n){
-		case 0:
-			return 0;
-			break;
-		case 1:
-			{
-				byte_t tmp=state[0];
-				state[0]=state[1];
-				state[1]=state[2];
-				state[2]=state[3];
-				state[3]=tmp;	
-			}
-			break;
-		case 2:
-			{
-				byte_t tmp=state[0];
-				state[0]=state[2];
-				state[2]=tmp;
-				tmp=state[1];
-				state[1]=state[3];
-				state[3]=tmp;
-			}
-			break;
-		case 3:
-			{
-				byte_t tmp=state[3];
-				state[3]=state[2];
-				state[2]=state[1];
-				state[1]=state[0];
-				state[0]=tmp;
-			}
-			break;
-	}
-	return 0;
-}
-#endif
 
 int state_bvary_lmove(byte_t * state)
 {
@@ -153,7 +112,7 @@ int state_bvary_lmove(byte_t * state)
 		{
 			subbyte(&state[i*4+j]);
 		}
-		ret = state_line_move_left(state,i);
+		ret = state_line_move_left(&state[i*4],i);
 		if(ret < 0)
 			return ret;
 	}

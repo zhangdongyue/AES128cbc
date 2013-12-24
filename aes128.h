@@ -3,22 +3,25 @@
 
 #include<stdio.h>
 #include<stdlib.h>
+#include<string.h>
 
-#define  byte_t char
-#define  word_t int32_t
 
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
 #define ROTATE_LEFT(x, s, n)  ((x) << (n))|((x) >> ((s) - (n)))
 #define ROTATE_RIGHT(x, s, n) ((x) >> (n))|((x) << ((s) - (n)))
+
+typedef  unsigned char byte_t;
+typedef  unsigned int word_t;
+
 union A{
     int16_t m;
     char n[2];  
 };
 
 
-static int sbox[16][16]=
+static byte_t sbox[16][16]=
 {
 	0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76, 
 
