@@ -1,4 +1,20 @@
 #include"aes128.h"
+
+static int bit_add_8(int8_t bx)
+{
+	int i=1;
+	int ret=bx&i;
+	while(i!=0x80) {	
+		i<<=1;
+		if(bx&i)
+			ret=GF2sup8_add(ret,1);
+		else
+			ret=GF2sup8_add(ret,0);
+
+	}
+	return ret;
+}
+
 //step 1
 void sbox_init()
 {
@@ -7,6 +23,7 @@ void sbox_init()
 		for(j=0;j<16;j++)
 			SBOX[i][j]=i<<4|j;
 }
+
 //step 2
 int sbox_inverse_gf28()
 {
@@ -27,20 +44,7 @@ int sbox_inverse_gf28()
 		}
 	return 0;
 }
-static int bit_add_8(int8_t bx)
-{
-	int i=1;
-	int ret=bx&i;
-	while(i!=0x80) {	
-		i<<=1;
-		if(bx&i)
-			ret=GF2sup8_add(ret,1);
-		else
-			ret=GF2sup8_add(ret,0);
 
-	}
-	return ret;
-}
 //step 3
 void sbox_bit_column_vector()
 {
@@ -60,5 +64,16 @@ void sbox_bit_column_vector()
 			SBOX[i][j]=vary;
 		}
 	return ;
+}
+
+//step 4
+void sbox_inverse()
+{
+	int i,j,inverse=0;
+	for(i=0;i<16;i++)
+		for(j=0;j<16;j++)
+		{
+			euclid_gcb_GF2sup8_ext(IRR_POLY16,sbox[i][j],&(SBOX[i][j]));			
+		}
 }
 

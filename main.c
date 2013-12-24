@@ -5,15 +5,17 @@ void sboxPrint()
 	int i,j;
 	for(i=0;i<16;i++){
 		for(j=0;j<16;j++)
-			printf("0x%02x ",SBOX[i][j]);
+			printf("0x%02x, ",SBOX[i][j]);
 		putchar('\n');
 		putchar('\n');
 	}
 }
+
 int main(void)
 {
 		//10000011 83
 #if 0
+		//test1
         int a=0x80,b=0x83;
         int ret = GF2sup8_mul8(a,b);
         printf("ret = %02x\n",ret);
@@ -31,10 +33,23 @@ int main(void)
 		int inverse=0;
 		euclid_gcb_GF2sup8_ext(IRR_POLY16,a,&inverse);
 		printf("inverse of 0x%x=0x%x\n",a,inverse);
-#endif
+		//test2
 		sbox_init();
 		sbox_inverse_gf28();
 		sbox_bit_column_vector();
+		sbox_inverse();
 		sboxPrint();
-        return 0;
+		//test3
+		byte_t key[16]={0xea,0xd2,0x73,0x21,0xb5,0x8d,0xba,0xd2,0x31,0x2b,0xf5,0x60,0x7f,0x8d,0x29,0x2f};
+		word_t temp=0x7f8d292f;
+		temp=ROTATE_LEFT(temp,32,8);//rotword
+		subword(&temp);
+		temp=GF2sup8_add(temp,0x1b<<24);
+		temp=GF2sup8_add(temp,0xead27321);
+		printf("temp =%X\n",temp);
+#endif
+		//test4
+		byte_t key[16]={0xea,0xd2,0x73,0x21,0xb5,0x8d,0xba,0xd2,0x31,0x2b,0xf5,0x60,0x7f,0x8d,0x29,0x2f};
+		
+		return 0;
 }
