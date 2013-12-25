@@ -7,13 +7,6 @@ int16_t bit_vector[16]=
 	0x0008,0x0004,0x0002,0x0001
 };
 
-void set_bit(int * s,const int off)
-{
-	int b=1;
-	b<<=off;
-	*s|=b;	
-}
-
 static int move_left_by(const int s,const int b)
 {
 	if(s>b || s<=0)
@@ -30,18 +23,6 @@ static int move_left_by(const int s,const int b)
 	}   
 	int m_n=si-bi;
 	return m_n;
-}
-
-/*a+b*/
-int GF2sup8_add(const int a,const int b)
-{
-	return a^b;
-}
-
-/*a-b*/
-int GF2sup8_red(const int a,const int b)
-{
-	return GF2sup8_add(a,b);
 }
 
 /*axb*/
@@ -94,7 +75,7 @@ int GF2sup8_divid(const int a,const int b,int * mod)
 	while(A>b){
 		c=move_left_by(b,A);
 		if(c<0) break;
-		set_bit(&ret,c);
+		SET_BIT(&ret,c);
 		A=(b<<c)^A;
 	}
 	if(mod)

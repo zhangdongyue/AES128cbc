@@ -12,14 +12,21 @@
 #define ROTATE_LEFT(x, s, n)  ((x) << (n))|((x) >> ((s) - (n)))
 #define ROTATE_RIGHT(x, s, n) ((x) >> (n))|((x) << ((s) - (n)))
 
-typedef  unsigned char byte_t;
-typedef  unsigned int word_t;
+
+#define SET_BIT(s,off)\
+{\
+    int b=1;\
+    b<<=off;\
+    *s|=b;\
+}
+
+typedef  unsigned char  byte_t;
+typedef  unsigned int   word_t;
 
 union A{
     int16_t m;
     char n[2];  
 };
-
 
 static byte_t sbox[16][16]=
 {
@@ -61,9 +68,10 @@ static byte_t sbox[16][16]=
    bit type:00011011*/
 #define IRR_POLY8  0x001B
 #define IRR_POLY16 0x011B
-
-int GF2sup8_add(const int a,const int b);//+
-int GF2sup8_red(const int a,const int b);//-
+/*a+b*/
+#define GF2sup8_add(a,b) ((a)^(b))
+/*a-b*/
+#define GF2sup8_red(a,b) ((a)^(b))
 int GF2sup8_mul8(const int a,const int b);//x
 int GF2sup8_mul16(const int a,const int b);//x
 int GF2sup8_divid(const int a,const int b,int * mod);// /
@@ -76,8 +84,7 @@ int euclid_gcb_GF2sup8_ext(int mx,int bx,int * inverse);
 
 /*S-Box*/
 #define VARY_C	0x63
-void set_bit(int * s,const int off);
-static int vary_matrix[8]={0xf1,0xe3,0xc7,0x8f,0x1f,0x3e,0x7c,0xf8};
+static byte_t vary_matrix[8]={0xf1,0xe3,0xc7,0x8f,0x1f,0x3e,0x7c,0xf8};
 int SBOX[16][16];
 
 void sbox_init();
@@ -88,11 +95,14 @@ void sbox_inverse();
 /*encryption*/
 int is_big_endian();
 void subword(word_t * w);
-void key_expansion(byte_t * key,word_t * w);
-void state_init(byte_t * state);
-int state_put(char * input,byte_t * state);
-int state_line_move_left(byte_t * state,int n);
-int state_bvary_lmove(byte_t * state);
+void subbyte(byte_t * b);
+//void key_expansion(byte_t * key,word_t * w);
+//void state_init(byte_t * state);
+//int state_put(char * input,byte_t * state);
+int state_shift_row_left(byte_t * state,int n);
+int state_bvary_lshift(byte_t * state);
+int state_mix_columns(byte_t * state);
+int state_add_rou_key(byte_t * state,word_t* key);
 
 #endif
 

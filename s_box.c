@@ -58,7 +58,7 @@ void sbox_bit_column_vector()
 			for(k=0;k<8;k++) {
 				bt=bit_add_8(sxy&vary_matrix[k]);
 				if(bt)
-					set_bit(&bx,k);	
+					SET_BIT(&bx,k);	
 			}
 			vary=GF2sup8_add(bx,VARY_C);
 			SBOX[i][j]=vary;
