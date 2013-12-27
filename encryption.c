@@ -1,14 +1,12 @@
 #include"aes128.h"
 
-static byte_t State[4*4];//4x4 byte
-static byte_t Key[4*4];//4x4 byte
-static word_t W[11*4];//4x4x11 byte
+word_t W[11*4];//4x4x11 byte
 
 /*RC[0]=1,RC[j]=2xRC[j-1],x:GF2sup8_mul8*/
-static byte_t RC[10]={0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80,0x1b,0x36};
+static const byte_t RC[10]={0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80,0x1b,0x36};
 
 /*Used to mix columns*/
-static byte_t MixC[4][4]=
+static const byte_t MixC[4][4]=
 {
   0x02,0x03,0x01,0x01,
   0x01,0x02,0x03,0x01,
@@ -31,7 +29,7 @@ void subbyte(byte_t * b)
 	byte_t bv=*b;
 	si=(bv&0xf0)>>4;
 	sj=bv&0x0f;
-	*b=sbox[si][sj];
+	*b=sbox[si*16+sj];
 }
 
 void subword(word_t * w)
@@ -42,7 +40,7 @@ void subword(word_t * w)
 	{
 		si=(cw[i]&0xf0)>>4;
 		sj=cw[i]&0x0f;	
-		cw[i]=sbox[si][sj];
+		cw[i]=sbox[si*16+sj];
 	}
 }
 
@@ -65,8 +63,8 @@ static void key_expansion(byte_t * key,word_t * w)
 			temp=ROTATE_LEFT(temp,32,8);//rotword
 			subword(&temp);
 			temp=GF2sup8_add(temp,RC[i/4-1]<<24);
-			temp=GF2sup8_add(temp,w[i-4]);
 		}	
+		w[i]=GF2sup8_add(w[i-4],temp);
 	}
 }
 
@@ -93,7 +91,7 @@ static int state_put(char * input,byte_t * state)
 }
 
 /*Shift one row left*/
-int state_shift_row_left(byte_t * state,int n)
+static int state_shift_row_left(byte_t * state,int n)
 {
 	if(n>3 || n<0 || !state) 
 		return -1;
@@ -111,7 +109,7 @@ int state_shift_row_left(byte_t * state,int n)
 
 
 /*Substitute bytes and shift rows*/
-int state_bvary_lshift(byte_t * state)
+static int state_bvary_lshift(byte_t * state)
 {
 	int i,j,ret;
 
@@ -129,48 +127,55 @@ int state_bvary_lshift(byte_t * state)
 }
 
 /*Mix columns*/
-int state_mix_columns(byte_t * state)
+static void state_mix_columns(byte_t * state)
 {
 	int i,j,ret;
 	byte_t tr[4];
 	for(i=0;i<4;i++){
 		for(j=0;j<4;j++){
 			tr[j]=GF2sup8_mul8(MixC[j][0],state[0*4+i])^
-				  GF2sup8_mul8(MixC[j][1],state[1*4+i])^
-				  GF2sup8_mul8(MixC[j][2],state[2*4+i])^
-				  GF2sup8_mul8(MixC[j][3],state[3*4+i]);
+				GF2sup8_mul8(MixC[j][1],state[1*4+i])^
+				GF2sup8_mul8(MixC[j][2],state[2*4+i])^
+				GF2sup8_mul8(MixC[j][3],state[3*4+i]);
 		}
 		state[0*4+i]=tr[0];
 		state[1*4+i]=tr[1];
 		state[2*4+i]=tr[2];
 		state[3*4+i]=tr[3];
 	}
-	return 0;
 }
 
 /*Add round key*/
-int state_add_rou_key(byte_t * state,word_t* key)
+static int state_add_rou_key(byte_t * state,word_t* key)
 {
 	if(!state || !key) 
 		return -1;
 	int i;
 	for(i=0;i<4;i++)
 	{
-		state[i*4]=GF2sup8_add(state[i*4],ROTATE_LEFT(*key,32,8)&0xff);
-		state[i*4+1]=GF2sup8_add(state[i*4+1],ROTATE_LEFT(*key,32,16)&0x00ff);
-		state[i*4+2]=GF2sup8_add(state[i*4+2],ROTATE_RIGHT(*key,32,8)&0xff);
-		state[i*4+3]=GF2sup8_add(state[i*4+3],*key&0xff);
-		key++;
-	}	
+		state[i]=GF2sup8_add(state[i],ROTATE_LEFT(key[i],32,8)&0xff);
+	}
+	for(i=0;i<4;i++)
+	{
+		state[4+i]=GF2sup8_add(state[4+i],ROTATE_LEFT(key[i],32,16)&0x00ff);
+	}
+	for(i=0;i<4;i++)
+	{
+		state[2*4+i]=GF2sup8_add(state[2*4+i],ROTATE_RIGHT(key[i],32,8)&0xff);
+	}
+	for(i=0;i<4;i++)
+	{
+		state[3*4+i]=GF2sup8_add(state[3*4+i],key[i]&0xff);
+	}
 	return 0;
 }
 
 static void PKCS5Padding(byte_t * buf,int len,byte_t * paddingBuf)
 {
-	int i;
-	int p=8-len%8
-		for(i=0;i<len;i++)
-			paddingBuf[i]=buf[i];
+	int i,j;
+	int p=8-len%8;
+	for(i=0;i<len;i++)
+		paddingBuf[i]=buf[i];
 	for(j=len;j<16;j++)
 	{
 		if(j<8)
@@ -179,33 +184,82 @@ static void PKCS5Padding(byte_t * buf,int len,byte_t * paddingBuf)
 			paddingBuf[i+p]=8;
 	}
 }
-static void PKCS7Padding(byte_t * buf,int len,byte_t * paddingBuf)
+
+static void PKCS7Padding(byte_t * buf,int len,int keylen,byte_t * paddingBuf)
 {
+	int i,j;
+	int p=keylen-len%8;
+	for(i=0;i<len;i++)
+		paddingBuf[i]=buf[i];
+
+	for(j=len;j<keylen;j++)
+		paddingBuf[j]=p?p:keylen;
 
 }
 //ZeroPadding
 /*AES128 encryption*/
-int AES128_enc(byte_t * input,int inlen,byte_t * key,int keylen,byte_t * output)
+int Aes128_Enc(byte_t * input,int inlen,byte_t * key,int keylen,byte_t * output)
 {
 	if(!input || inlen<=0 || !key || keylen!=16 || !output)
 		return -1;	
-	byte_t inPadBuf[16];
-	if(inlen<16)
-		PKCS5Padding(input,inlen,inPadBuf);
 	int i=0,ret=0;
-	state_put(inPadBuf,State);	
+	byte_t inPadBuf[16];
+	if(inlen<16){
+		PKCS5Padding(input,inlen,inPadBuf);
+		state_put(inPadBuf,output);
+	}else{
+		state_put(input,output);
+	}	
+
 	key_expansion(key,W);
-	state_add_rou_key(State,w+i);
+	i=0;
+	state_add_rou_key(output,W+i*4);
 	i++;
 	while(i<10){
-		if(state_bvary_lshift(State)<0)
+		if(state_bvary_lshift(output)<0)
 			return -1;
-		state_mix_columns(State);
-		state_add_rou_key(State,w+i);
+		state_mix_columns(output);
+		if(state_add_rou_key(output,W+i*4)<0)
+			return -1;
 		i++;	
 	}
-	if(state_bvary_lshift(State)<0)
+	if(state_bvary_lshift(output)<0)
 		return -1;
-	state_add_rou_key(State,w+i);
+	if(state_add_rou_key(output,W+i*4)<0)
+		return -1;
+	return 0;
+}
 
+int Aes128cbc_Pkcs7_Enc(byte_t * input,int inlen,byte_t * key,int keylen,byte_t * output,const byte_t * iv)
+{
+	if(!input || inlen<=0 || !key || keylen!=16 || !output)
+		return -1;	
+	int i=0,ret=0;
+	byte_t inPadBuf[16];
+	if(inlen<16){
+		PKCS7Padding(input,inlen,16,inPadBuf);
+		for(i=0;i<16;i++) inPadBuf[i]^=iv[i];
+	}else{
+		for(i=0;i<16;i++) inPadBuf[i]=input[i]^iv[i];
+	}	
+	state_put(inPadBuf,output);
+
+	key_expansion(key,W);
+	i=0;
+	state_add_rou_key(output,W+i*4);
+	printf("the %d round\n",i);
+	i++;
+	while(i<10){
+		printf("the %d round\n",i);
+		if(state_bvary_lshift(output)<0)
+			return -1;
+		state_mix_columns(output);
+		state_add_rou_key(output,W+i*4);
+		i++;	
+	}
+	printf("the %d round\n",i);
+	if(state_bvary_lshift(output)<0)
+		return -1;
+	state_add_rou_key(output,W+i*4);
+	return 0;
 }

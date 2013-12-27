@@ -1,11 +1,12 @@
 #include"aes128.h"
-
-void sboxPrint()
+byte_t SBOX[16*16];
+static const byte_t IV[16]={0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f};
+void sboxPrint(byte_t * s)
 {
 	int i,j;
 	for(i=0;i<16;i++){
 		for(j=0;j<16;j++)
-			printf("0x%02x, ",SBOX[i][j]);
+			printf("0x%02x, ",s[i*16+j]);
 		putchar('\n');
 		putchar('\n');
 	}
@@ -15,11 +16,24 @@ void print4x(byte_t * box)
 	int i;
 	for(i=0;i<16;i++)
 	{
-		if(i%4==0) putchar('\n');
-		printf("%x ",box[i]);
+		//if(i%4==0) putchar('\n');
+		printf("%02x",box[i]);
 	}
 	putchar('\n');
 	putchar('\n');
+}
+void swap(byte_t * a,byte_t * b)
+{
+	*a=*a-*b;
+	*b=*a+*b;
+	*a=*b-*a;
+}
+void reverse4x(byte_t * box)
+{
+	int i,j;
+	for(i=0;i<3;i++)
+		for(j=i+1;j<4;j++)
+			swap(&box[4*i+j],&box[4*j+i]);
 }
 
 int main(void)
@@ -44,12 +58,11 @@ int main(void)
 	int inverse=0;
 	euclid_gcb_GF2sup8_ext(IRR_POLY16,a,&inverse);
 	printf("inverse of 0x%x=0x%x\n",a,inverse);
+#endif
 	//test2
-	sbox_init();
-	sbox_inverse_gf28();
-	sbox_bit_column_vector();
-	sbox_inverse();
-	sboxPrint();
+	gen_isbox(SBOX);	
+	sboxPrint(SBOX);
+#if 0
 	//test3
 	byte_t key[16]={0xea,0xd2,0x73,0x21,0xb5,0x8d,0xba,0xd2,0x31,0x2b,0xf5,0x60,0x7f,0x8d,0x29,0x2f};
 	word_t temp=0x7f8d292f;
@@ -58,27 +71,18 @@ int main(void)
 	temp=GF2sup8_add(temp,0x1b<<24);
 	temp=GF2sup8_add(temp,0xead27321);
 	printf("temp =%X\n",temp);
-#endif
 	//test4
 	int i;
-	word_t  key[4]={0xac192857,0x77fad15c,0x66dc2900,0xf321416a};
-	byte_t  state[16]={0x87,0xf2,0x4d,0x97,0xec,0x6e,0x4c,0x90,0x4a,0xc3,0x46,0xe7,0x8c,0xd8,0x95,0xa6};
-
-	printf("[State origin]\n");
-	print4x(state);
-
-	for(i=0;i<4;i++)
-		state_shift_row_left(&state[i*4],i);
-	printf("[After shift rows]\n");
-	print4x(state);
-
-	state_mix_columns(state);
-	printf("[After mix columns]\n");
-	print4x(state);
-	
-	state_add_rou_key(state,key);
-	printf("[After add round key]%x\n",0xbc^0x6a);
-	print4x(state);
-
+	//byte_t  input[16]={0x6b,0xc1,0xbe,0xe2,0x2e,0x40,0x9f,0x96,0xe9,0x3d,0x7e,0x11,0x73,0x93,0x17,0x2a};
+	byte_t  input[16]={0x32,0x43,0xf6,0xa8,0x88,0x5a,0x30,0x8d,0x31,0x31,0x98,0xa2,0xe0,0x37,0x07,0x34};
+	byte_t  k[16]={0x2b,0x7e,0x15,0x16,0x28,0xae,0xd2,0xa6,0xab,0xf7,0x15,0x88,0x09,0xcf,0x4f,0x3c};
+	//3925841d02dc09fbdc118597196a0b32
+	byte_t * S=calloc(16+1,sizeof(byte_t));
+	Aes128cbc_Pkcs7_Enc(input,16,k,16,S,IV);
+	if(S)
+		print4x(S);
+	reverse4x(S);
+		print4x(S);
+#endif
 	return 0;
 }
