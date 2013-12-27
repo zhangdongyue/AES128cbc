@@ -126,14 +126,21 @@ static byte_t ivary_matrix[8]={0xa4,0x49,0x92,0x25,0x4a,0x94,0x2a,0x52};
 void gen_isbox(byte_t * isbox); 
 void gen_sbox(byte_t * sbox);
 
+
 /*------Encryption-----*/
+word_t W[11*4];//4x4x11 byte
 int is_big_endian();
-void subword(word_t * w);
-void subbyte(byte_t * b);
+void subword(word_t * w,byte_t * s);
+void subbyte(byte_t * b,byte_t * s);
+void key_expansion(byte_t * key,word_t * w);
+void state_put(char * input,byte_t * state);
+int state_add_rou_key(byte_t * state,word_t* key);
+
 int Aes128_Enc(byte_t * input,int inlen,byte_t * key,int keylen,byte_t * output);
 int Aes128cbc_Pkcs7_Enc(byte_t * input,int inlen,byte_t * key,int keylen,byte_t * output,const byte_t * iv);
 
 /*------Decryption-----*/
+int Aes128_Dec(byte_t * cipherText,int cilen,byte_t * key,int keylen,byte_t * plainText);
 
 #endif
 

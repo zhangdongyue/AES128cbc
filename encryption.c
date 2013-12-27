@@ -1,7 +1,5 @@
 #include"aes128.h"
 
-word_t W[11*4];//4x4x11 byte
-
 /*RC[0]=1,RC[j]=2xRC[j-1],x:GF2sup8_mul8*/
 static const byte_t RC[10]={0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80,0x1b,0x36};
 
@@ -23,16 +21,16 @@ int is_big_endian()
     return (k.m==1)?1:0;
 }
 
-void subbyte(byte_t * b)
+void subbyte(byte_t * b,byte_t * s)
 {
 	int si,sj;
 	byte_t bv=*b;
 	si=(bv&0xf0)>>4;
 	sj=bv&0x0f;
-	*b=sbox[si*16+sj];
+	*b=s[si*16+sj];
 }
 
-void subword(word_t * w)
+void subword(word_t * w,byte_t * s)
 {
 	byte_t * cw=(byte_t *)w;
 	int i,si,sj;
@@ -40,11 +38,11 @@ void subword(word_t * w)
 	{
 		si=(cw[i]&0xf0)>>4;
 		sj=cw[i]&0x0f;	
-		cw[i]=sbox[si*16+sj];
+		cw[i]=s[si*16+sj];
 	}
 }
 
-static void key_expansion(byte_t * key,word_t * w)
+void key_expansion(byte_t * key,word_t * w)
 {
 	word_t  temp;
 	int i,j;
@@ -61,7 +59,7 @@ static void key_expansion(byte_t * key,word_t * w)
 		if(i%4==0)
 		{
 			temp=ROTATE_LEFT(temp,32,8);//rotword
-			subword(&temp);
+			subword(&temp,sbox);
 			temp=GF2sup8_add(temp,RC[i/4-1]<<24);
 		}	
 		w[i]=GF2sup8_add(w[i-4],temp);
@@ -78,7 +76,7 @@ static void state_init(byte_t * state)
 		}
 }
 
-static int state_put(char * input,byte_t * state)
+void state_put(char * input,byte_t * state)
 {
 	int i,j;
 	char * p=input;
@@ -87,8 +85,8 @@ static int state_put(char * input,byte_t * state)
 			state[j*4+i]=*p;
 			p++;	
 		}
-	return 0;
 }
+
 
 /*Shift one row left*/
 static int state_shift_row_left(byte_t * state,int n)
@@ -117,7 +115,7 @@ static int state_bvary_lshift(byte_t * state)
 	{
 		for(j=0;j<4;j++)
 		{
-			subbyte(&state[i*4+j]);//substitute bytes
+			subbyte(&state[i*4+j],sbox);//substitute bytes
 		}
 		ret = state_shift_row_left(&state[i*4],i);//shift rows
 		if(ret < 0)
@@ -146,7 +144,7 @@ static void state_mix_columns(byte_t * state)
 }
 
 /*Add round key*/
-static int state_add_rou_key(byte_t * state,word_t* key)
+int state_add_rou_key(byte_t * state,word_t* key)
 {
 	if(!state || !key) 
 		return -1;
