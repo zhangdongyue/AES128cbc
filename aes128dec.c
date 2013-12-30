@@ -1,13 +1,4 @@
-#include"aes128.h"
-/*Used to invert mix columns*/
-static const byte_t IMixC[4][4]=
-{
-  0x0e,0x0b,0x0d,0x09,
-  0x09,0x0e,0x0b,0x0d,
-  0x0d,0x09,0x0e,0x0b,
-  0x0b,0x0d,0x09,0x0e
-};
-
+#include"aes128_com.h"
 /*Shift one row right*/
 static int state_shift_row_right(byte_t * state,int n)
 {
@@ -34,10 +25,10 @@ static int istate_rshift_bvary(byte_t * state)
 	for(i=0;i<4;i++)
 	{
 		ret = state_shift_row_right(&state[i*4],i);//shift rows
-		for(j=0;j<4;j++)
-			subbyte(&state[i*4+j],isbox);//substitute bytes
 		if(ret < 0)
 			return ret;
+		for(j=0;j<4;j++)
+			subbyte(&state[i*4+j],isbox);//substitute bytes
 	}
 	return 0;		
 }
@@ -89,38 +80,47 @@ int Aes128_Dec(byte_t * cipherText,int cilen,byte_t * key,int keylen,byte_t * pl
 	return 0;
 }
 
-#if 0
-int Aes128cbc_Pkcs7_Dec(byte_t * input,int inlen,byte_t * key,int keylen,byte_t * output,const byte_t * iv)
+int Aes128cbc_Pkcs7_Dec(byte_t * cipherText,int cilen,byte_t * key,int keylen,byte_t * plainText,byte_t * ptlen,const byte_t * iv)
 {
-	if(!input || inlen<=0 || !key || keylen!=16 || !output)
+	if(!cipherText || cilen<=0 || !key || keylen!=16 || !plainText)
 		return -1;	
 	int i=0,ret=0;
 	byte_t inPadBuf[16];
-	if(inlen<16){
-		PKCS7Padding(input,inlen,16,inPadBuf);
-		for(i=0;i<16;i++) inPadBuf[i]^=iv[i];
-	}else{
-		for(i=0;i<16;i++) inPadBuf[i]=input[i]^iv[i];
-	}	
-	state_put(inPadBuf,output);
+	state_put(cipherText,plainText);
 
 	key_expansion(key,W);
-	i=0;
-	state_add_rou_key(output,W+i*4);
-	printf("the %d round\n",i);
-	i++;
-	while(i<10){
-		printf("the %d round\n",i);
-		if(istate_rshift_bvary(output)<0)
+	i=10;
+	state_add_rou_key(plainText,W+i*4);
+	i--;
+	while(i>0){
+		if(istate_rshift_bvary(plainText)<0)
 			return -1;
-		istate_mix_columns(output);
-		state_add_rou_key(output,W+i*4);
-		i++;	
+		if(state_add_rou_key(plainText,W+i*4)<0)
+			return -1;
+		istate_mix_columns(plainText);
+		i--;	
 	}
-	printf("the %d round\n",i);
-	if(istate_rshift_bvary(output)<0)
+	if(istate_rshift_bvary(plainText)<0)
 		return -1;
-	state_add_rou_key(output,W+i*4);
+	if(state_add_rou_key(plainText,W+i*4)<0)
+		return -1;
+
+	int j;
+	for(i=0;i<4;i++) 
+		for(j=0;j<4;j++)
+			plainText[i*4+j]=plainText[i*4+j]^iv[j*4+i];
+	
+	reverse4x(plainText);
+	//depkcs7
+	int pn=plainText[15];
+	j=0;
+	if(pn<16 && pn!=0){
+		for(i=16-pn;i<16;i++){
+			if(plainText[i]!=pn)
+				break;
+			j++;
+		}
+	}
+	*ptlen = (j==pn)?16-pn:16;
 	return 0;
 }
-#endif

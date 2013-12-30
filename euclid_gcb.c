@@ -1,4 +1,4 @@
-#include"aes128.h"
+#include"euclid_gcb.h"
 int euclid_gcb(int a,int b)
 {
     int A,B,R;
