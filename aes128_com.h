@@ -37,6 +37,6 @@ int  state_add_rou_key(byte_t * state,word_t* key);
 
 /*decryption*/
 int Aes128_Dec(byte_t * cipherText,int cilen,byte_t * key,int keylen,byte_t * plainText);
-int Aes128cbc_Pkcs7_Dec(byte_t * cipherText,int cilen,byte_t * key,int keylen,byte_t * plainText,byte_t * ptlen,const byte_t * iv);
+int Aes128cbc_Pkcs7_Dec(byte_t * cipherText,int cilen,byte_t * key,int keylen,byte_t * plainText,int * ptlen,const byte_t * iv);
 
 #endif

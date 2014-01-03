@@ -63,17 +63,8 @@ int state_add_rou_key(byte_t * state,word_t* key)
     for(i=0;i<4;i++)
     {
         state[i]=GF2sup8_add(state[i],ROTATE_LEFT(key[i],32,8)&0xff);
-    }
-    for(i=0;i<4;i++)
-    {
         state[4+i]=GF2sup8_add(state[4+i],ROTATE_LEFT(key[i],32,16)&0x00ff);
-    }
-    for(i=0;i<4;i++)
-    {
         state[2*4+i]=GF2sup8_add(state[2*4+i],ROTATE_RIGHT(key[i],32,8)&0xff);
-    }
-    for(i=0;i<4;i++)
-    {
         state[3*4+i]=GF2sup8_add(state[3*4+i],key[i]&0xff);
     }
     return 0;

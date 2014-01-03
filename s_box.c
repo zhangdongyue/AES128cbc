@@ -1,5 +1,4 @@
 #include"s_box.h"
-
 static int bit_add_8(int8_t bx)
 {
 	int i=1;
@@ -14,6 +13,20 @@ static int bit_add_8(int8_t bx)
 	}
 	return ret;
 }
+#if 0
+static byte_t affineX (byte_t *b, byte_t *c) {  
+	int j=0;
+	byte_t *bprime;
+    for (j=0; j<8; j++) {
+        bprime[j]  = b[j] ^ b[(j+4)%8];
+        bprime[j] ^= b[(j+5)%8];
+        bprime[j] ^= b[(j+6)%8];
+        bprime[j] ^= b[(j+7)%8];
+        bprime[j] ^= c[j];
+    }
+    return  *bprime;
+}
+#endif
 
 //step 1
 static void sbox_init(byte_t * s)
@@ -45,7 +58,6 @@ static int sbox_inverse_gf28(byte_t * s)
 	return 0;
 }
 
-//step 3 sbox
 static void sbox_bit_column_vector(byte_t * s)
 {
 	int i,j,k;
@@ -58,7 +70,7 @@ static void sbox_bit_column_vector(byte_t * s)
 			for(k=0;k<8;k++) {
 				bt=bit_add_8(sxy&vary_matrix[k]);
 				if(bt)
-					SET_BIT(&bx,k);	
+					setbit(&bx,k);
 			}
 			vary=GF2sup8_add(bx,VARY_C);
 			s[i*16+j]=vary;
@@ -78,7 +90,7 @@ static void isbox_bit_column_vector(byte_t * s)
 			for(k=0;k<8;k++) {
 				bt=bit_add_8(sxy&ivary_matrix[k]);
 				if(bt)
-					SET_BIT(&bx,k);	
+					setbit(&bx,k);
 			}
 			vary=GF2sup8_add(bx,IVARY_C);
 			s[i*16+j]=vary;

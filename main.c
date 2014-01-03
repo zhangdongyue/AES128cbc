@@ -46,9 +46,11 @@ int main(void)
 	int inverse=0;
 	euclid_gcb_GF2sup8_ext(IRR_POLY16,a,&inverse);
 	printf("inverse of 0x%x=0x%x\n",a,inverse);
+#endif
 	//test2
-	gen_isbox(SBOX);	
+	gen_sbox(SBOX);	
 	sboxPrint(SBOX);
+#if 0
 	//test3
 	byte_t key[16]={0xea,0xd2,0x73,0x21,0xb5,0x8d,0xba,0xd2,0x31,0x2b,0xf5,0x60,0x7f,0x8d,0x29,0x2f};
 	word_t temp=0x7f8d292f;
@@ -57,7 +59,6 @@ int main(void)
 	temp=GF2sup8_add(temp,0x1b<<24);
 	temp=GF2sup8_add(temp,0xead27321);
 	printf("temp =%X\n",temp);
-#endif
 	//test4
 	int i;
 	//byte_t  input[16]={0x6b,0xc1,0xbe,0xe2,0x2e,0x40,0x9f,0x96,0xe9,0x3d,0x7e,0x11,0x73,0x93,0x17,0x2a};
@@ -75,9 +76,10 @@ int main(void)
 	}
 	byte_t * plain=calloc(16+1,sizeof(byte_t));
 	//Aes128_Dec(S,16,k,16,plain);
-	byte_t ptlen=0;
+	int ptlen=0;
 	Aes128cbc_Pkcs7_Dec(S,16,k,16,plain,&ptlen,IV);
 	print4x(plain);
 	printf("ptlen=%d\n",ptlen);
+#endif
 	return 0;
 }

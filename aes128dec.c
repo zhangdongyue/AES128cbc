@@ -80,7 +80,7 @@ int Aes128_Dec(byte_t * cipherText,int cilen,byte_t * key,int keylen,byte_t * pl
 	return 0;
 }
 
-int Aes128cbc_Pkcs7_Dec(byte_t * cipherText,int cilen,byte_t * key,int keylen,byte_t * plainText,byte_t * ptlen,const byte_t * iv)
+int Aes128cbc_Pkcs7_Dec(byte_t * cipherText,int cilen,byte_t * key,int keylen,byte_t * plainText,int * ptlen,const byte_t * iv)
 {
 	if(!cipherText || cilen<=0 || !key || keylen!=16 || !plainText)
 		return -1;	
@@ -112,15 +112,6 @@ int Aes128cbc_Pkcs7_Dec(byte_t * cipherText,int cilen,byte_t * key,int keylen,by
 	
 	reverse4x(plainText);
 	//depkcs7
-	int pn=plainText[15];
-	j=0;
-	if(pn<16 && pn!=0){
-		for(i=16-pn;i<16;i++){
-			if(plainText[i]!=pn)
-				break;
-			j++;
-		}
-	}
-	*ptlen = (j==pn)?16-pn:16;
+	PKCS7_UnPad(plainText,16,16,ptlen);
 	return 0;
 }

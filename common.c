@@ -23,6 +23,7 @@ void reverse4x(byte_t * box)
             swap(&box[4*i+j],&box[4*j+i]);
 }
 
+#if 0
 void PKCS5Padding(byte_t * buf,int len,byte_t * paddingBuf)
 {
     int i,j;
@@ -37,15 +38,30 @@ void PKCS5Padding(byte_t * buf,int len,byte_t * paddingBuf)
             paddingBuf[i+p]=8;
     }
 }
+#endif
 
-void PKCS7Padding(byte_t * buf,int len,int keylen,byte_t * paddingBuf)
+void PKCS7_Pad(byte_t * buf,int buflen,int blocksize,byte_t * paddingBuf)
 {
-    int i,j;
-    int p=keylen-len%keylen;
-    for(i=0;i<len;i++)
+    int i;
+    int p=blocksize-buflen%blocksize;
+    for(i=0;i<buflen;i++)
         paddingBuf[i]=buf[i];
 
-    for(j=len;j<keylen;j++)
-        paddingBuf[j]=p?p:keylen;
+    for(i=buflen;i<blocksize;i++)
+        paddingBuf[i]=p;
 
+}
+
+void PKCS7_UnPad(byte_t * buf,int buflen,int blocksize,int * orilen)
+{
+    int i,j=0;
+    int pn=buf[blocksize-1];
+    if(pn<16 && pn!=0){
+        for(i=16-pn;i<16;i++){
+            if(buf[i]!=pn)
+                break;
+            j++;
+        }   
+    }   
+    *orilen = (j==pn)?16-pn:16;	
 }

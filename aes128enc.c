@@ -58,16 +58,10 @@ static void state_mix_columns(byte_t * state)
 /*AES128 encryption*/
 int Aes128_Enc(byte_t * input,int inlen,byte_t * key,int keylen,byte_t * output)
 {
-	if(!input || inlen<=0 || !key || keylen!=16 || !output)
+	if(!input || inlen!=16 || !key || keylen!=16 || !output)
 		return -1;	
 	int i=0,ret=0;
-	byte_t inPadBuf[16];
-	if(inlen<16){
-		PKCS5Padding(input,inlen,inPadBuf);
-		state_put(inPadBuf,output);
-	}else{
-		state_put(input,output);
-	}	
+	state_put(input,output);
 
 	key_expansion(key,W);
 	i=0;
@@ -88,36 +82,56 @@ int Aes128_Enc(byte_t * input,int inlen,byte_t * key,int keylen,byte_t * output)
 	return 0;
 }
 
+int Aes128cbc_Enc(byte_t * state,int slen,byte_t * key,int keylen,const byte_t * iv)
+{
+	if(!state || slen!=16 || !key || keylen!=16 )
+		return -1;	
+	int i=0;
+	reverse4x(state);
+	key_expansion(key,W);
+	i=0;
+	state_add_rou_key(state,W+i*4);
+	i++;
+	while(i<10){
+		if(state_bvary_lshift(state)<0)
+			return -1;
+		state_mix_columns(state);
+		state_add_rou_key(state,W+i*4);
+		i++;	
+	}
+	if(state_bvary_lshift(state)<0)
+		return -1;
+	state_add_rou_key(state,W+i*4);
+	return 0;
+}
+
+
 int Aes128cbc_Pkcs7_Enc(byte_t * input,int inlen,byte_t * key,int keylen,byte_t * output,const byte_t * iv)
 {
 	if(!input || inlen<=0 || !key || keylen!=16 || !output)
 		return -1;	
 	int i=0,ret=0;
-	byte_t inPadBuf[16];
 	if(inlen<16){
-		PKCS7Padding(input,inlen,16,inPadBuf);
-		for(i=0;i<16;i++) inPadBuf[i]^=iv[i];
+		PKCS7_Pad(input,inlen,16,output);
+		for(i=0;i<16;i++) output[i]^=iv[i];
 	}else{
-		for(i=0;i<16;i++) inPadBuf[i]=input[i]^iv[i];
+		for(i=0;i<16;i++) output[i]=input[i]^iv[i];
 	}	
-	state_put(inPadBuf,output);
-
+	reverse4x(output);
 	key_expansion(key,W);
 	i=0;
 	state_add_rou_key(output,W+i*4);
-	printf("the %d round\n",i);
 	i++;
 	while(i<10){
-		printf("the %d round\n",i);
 		if(state_bvary_lshift(output)<0)
 			return -1;
 		state_mix_columns(output);
 		state_add_rou_key(output,W+i*4);
 		i++;	
 	}
-	printf("the %d round\n",i);
 	if(state_bvary_lshift(output)<0)
 		return -1;
 	state_add_rou_key(output,W+i*4);
 	return 0;
 }
+

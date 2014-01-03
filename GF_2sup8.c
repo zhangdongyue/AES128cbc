@@ -67,7 +67,8 @@ int GF2sup8_divid(const int a,const int b,int * mod)
 	while(A>b){
 		c=move_left_by(b,A);
 		if(c<0) break;
-		SET_BIT(&ret,c);
+		setbit(&ret,c);
+		//SET_BIT(&ret,c);
 		A=(b<<c)^A;
 	}
 	if(mod)
