@@ -3,9 +3,7 @@ void subbyte(byte_t * b,byte_t * s)
 {
     int si,sj;
     byte_t bv=*b;
-    si=(bv&0xf0)>>4;
-    sj=bv&0x0f;
-    *b=s[si*16+sj];
+    *b=s[bv];
 }
 
 void subword(word_t * w,byte_t * s)
@@ -13,11 +11,7 @@ void subword(word_t * w,byte_t * s)
     byte_t * cw=(byte_t *)w;
     int i,si,sj;
     for(i=0;i<4;i++)
-    {   
-        si=(cw[i]&0xf0)>>4;
-        sj=cw[i]&0x0f;
-        cw[i]=s[si*16+sj];
-    }   
+        cw[i]=s[cw[i]];
 }
 
 void key_expansion(byte_t * key,word_t * w)

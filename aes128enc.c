@@ -102,6 +102,7 @@ int Aes128cbc_Enc(byte_t * state,int slen,byte_t * key,int keylen,const byte_t *
 	if(state_bvary_lshift(state)<0)
 		return -1;
 	state_add_rou_key(state,W+i*4);
+	reverse4x(state);
 	return 0;
 }
 
@@ -132,6 +133,7 @@ int Aes128cbc_Pkcs7_Enc(byte_t * input,int inlen,byte_t * key,int keylen,byte_t 
 	if(state_bvary_lshift(output)<0)
 		return -1;
 	state_add_rou_key(output,W+i*4);
+	reverse4x(output);
 	return 0;
 }
 
